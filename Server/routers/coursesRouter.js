@@ -8,7 +8,7 @@ router.post("/addCourse",authorize.authorize,coursesController.addCourse);
 
 router.put("/UpdateCourse/:course_id",authorize.authorize,coursesController.UpdateCourse);
 
-router.delete("/SoftdeleteCourse/:course_id",authorize.authorize,coursesController.SoftdeleteCourse);
+router.put("/SoftdeleteCourse/:course_id",authorize.authorize,coursesController.SoftdeleteCourse);
 
 router.put("/RestoreCourse/:course_id",authorize.authorize,coursesController.RestoreCourse);
 

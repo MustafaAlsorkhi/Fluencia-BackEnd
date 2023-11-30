@@ -483,33 +483,80 @@ async function getAllPostsOnCourse(req, res) {
 
 
 
+// async function getCourseAdmin(req, res) {
+//   try {
+//     const course_id = req.params.course_id;
+
+//     const adminInfo = await UserModel.getCourseAdmin(course_id);
+
+//     res.status(200).json({ adminInfo });
+//   } catch (error) {
+//     console.error('An error occurred while retrieving course admin information', error);
+//     res.status(500).json({ error: 'An error occurred while retrieving course admin information' });
+//   }
+// }
+//__________________________________________________________________________________
+
+
 async function getCourseAdmin(req, res) {
   try {
     const course_id = req.params.course_id;
 
+    if(course_id == -1){
+
+      const usid = req.user.user_id;
+      console.log(usid)
+      const course = await UserModel.GetUserCourse(usid);
+      course_id = course.course_id;
+    }
+
+
     const adminInfo = await UserModel.getCourseAdmin(course_id);
 
-    res.status(200).json({ adminInfo });
+    res.status(200).json( adminInfo );
   } catch (error) {
     console.error('An error occurred while retrieving course admin information', error);
     res.status(500).json({ error: 'An error occurred while retrieving course admin information' });
   }
 }
 
+
+//__________________________________________________________________________________
+
+// async function getStudentsInCourse(req, res) {
+//   try {
+//     const course_id = req.params.course_id;
+
+//     const students = await UserModel.getStudentsInCourse(course_id);
+
+//     res.status(200).json({ students });
+//   } catch (error) {
+//     console.error('An error occurred while retrieving students in the course', error);
+//     res.status(500).json({ error: 'An error occurred while retrieving students in the course' });
+//   }
+// }
+
 async function getStudentsInCourse(req, res) {
   try {
-    const course_id = req.params.course_id;
+    let course_id = req.params.course_id ; 
+
+    // should test I am not test it  Osama Nobani
+    if(course_id == -1){
+
+      const usid = req.user.user_id;
+      console.log(usid)
+      const course = await UserModel.GetUserCourse(usid);
+      course_id = course.course_id;
+    }
 
     const students = await UserModel.getStudentsInCourse(course_id);
 
-    res.status(200).json({ students });
+    res.status(200).json( students );
   } catch (error) {
     console.error('An error occurred while retrieving students in the course', error);
     res.status(500).json({ error: 'An error occurred while retrieving students in the course' });
   }
 }
-
-
 
 
 
