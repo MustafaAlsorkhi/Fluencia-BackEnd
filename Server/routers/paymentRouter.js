@@ -15,6 +15,12 @@ router.use(bodyparser.urlencoded({ extended: false }));
 router.post("/create-customer",authUser.authUser,paymentController.createCustomer);
 router.post("/createCustomer2Months",authUser.authUser,paymentController.createCustomer2Months);
 router.post("/createCustomer3Months",authUser.authUser,paymentController.createCustomer3Months);
+
+
+
+
+
+
 router.post("/add-card",paymentController.addNewCard);
 router.post("/create-charges",paymentController.createCharges);
 

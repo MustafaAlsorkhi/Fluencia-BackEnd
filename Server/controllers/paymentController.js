@@ -1,3 +1,5 @@
+const db = require("../models/db");
+
 require("dotenv").config();
 
 const { STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY } = process.env;
@@ -37,8 +39,10 @@ const session = await stripe.checkout.sessions.create({
     subscription_data: checkoutObject.subscription_data,
   });
 
+
   res.json({ id: session.id }); ///must use this front end becouse when use it will redirect to on stripe forms
-        
+  await updateIsPayToTrue(req.user.user_id);
+   
     } catch (error) {
         res.status(400).send({success:false,msg:error.message});
         console.log("dfghjkl;lkjhgf")
@@ -46,6 +50,9 @@ const session = await stripe.checkout.sessions.create({
     }
 
 }
+
+
+
     
 const createCustomer2Months = async(req,res)=>{
     console.log("dfghjkl;lkjhgf")
@@ -81,7 +88,8 @@ const session = await stripe.checkout.sessions.create({
   });
 
   res.json({ id: session.id }); ///must use this front end becouse when use it will redirect to on stripe forms
-        
+  await updateIsPayToTrue(req.user.user_id);
+
     } catch (error) {
         res.status(400).send({success:false,msg:error.message});
         console.log("dfghjkl;lkjhgf")
@@ -124,7 +132,8 @@ const session = await stripe.checkout.sessions.create({
   });
 
   res.json({ id: session.id }); ///must use this front end becouse when use it will redirect to on stripe forms
-        
+  await updateIsPayToTrue(req.user.user_id);
+
     } catch (error) {
         res.status(400).send({success:false,msg:error.message});
         console.log("dfghjkl;lkjhgf")
@@ -132,6 +141,62 @@ const session = await stripe.checkout.sessions.create({
     }
 
 }
+
+
+
+
+
+
+
+
+async function updateIsPayToTrue(userId) {
+    try {
+      const query = 'UPDATE users SET is_pay = $1 WHERE user_id = $2';
+      await db.query(query, [true, userId]);
+      console.log(`is_pay for user ${userId} updated to true`);
+    } catch (error) {
+      console.error('Error updating is_pay:', error);
+      throw error;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const addNewCard = async(req,res)=>{
 

@@ -1,14 +1,14 @@
 const db = require("../models/db");
 
 
-const addTask = async (task_name, task_description, task_url,admin_id) => {
-    const queryText = `
-      INSERT INTO task (admin_id,task_name, task_description, task_url)
-      VALUES ($1, $2, $3, $4 )
-      RETURNING task_id;
-    `;
+const addTask = async (task_name, task_description, task_url,admin_id,course_id) => {
+  const queryText = `
+  INSERT INTO task (admin_id, task_name, task_description, task_url, course_id)
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING task_id;
+`;
   
-    const values = [admin_id,task_name, task_description, task_url];
+    const values = [admin_id,task_name, task_description, task_url,course_id];
   
     try {
       const result = await db.query(queryText, values);
@@ -78,14 +78,50 @@ const RestoreTask = async (task_id,admin_id) => {
 //____________________________________________________________________________________________
 
 
-const GetTaskes = async () => {
-    const queryText = `
-      SELECT task_name, task_description, task_url
-      FROM task
-      WHERE deleted = FALSE;
-    `;    
+const GetTaskbyID = async (task_id) => {
+  const queryText = `
+  SELECT task.task_id, task.task_name, task.task_description, task.task_url,
+  users_task.user_id, users.first_name, users_task.submit_date, users_task.answer_url
+FROM task
+INNER JOIN users_task ON task.task_id = users_task.task_id
+INNER JOIN users ON users_task.user_id = users.user_id
+WHERE task.task_id = $1;
+`;    
 try {
-      const result = await db.query(queryText);
+      const result = await db.query(queryText,[task_id]);
+      return result.rows;
+    } catch (error) {
+      console.error("Failed to get this Task ", error);
+      throw new Error("Failed to get this Task ");
+    }
+  };
+
+
+  //____________________________________________________________________________________________
+//   const GetTaskes = async (pageSize,offset,course_id) => {
+//     const queryText = `
+//     SELECT task_name, task_description, task_url
+//     FROM task
+//     WHERE deleted = FALSE AND course_id = $3 
+//     LIMIT $1 OFFSET $2;
+//   `;  
+// try {
+//       const result = await db.query(queryText,[pageSize,offset,course_id]);
+//       return result.rows;
+//     } catch (error) {
+//       console.error("Failed to get taskes in the model: ", error);
+//       throw new Error("Failed to get taskes in the model");
+//     }
+//   };
+
+  const GetTaskes = async (course_id) => {
+    const queryText = `
+    SELECT task_name, task_description, task_url
+    FROM task
+    WHERE deleted = FALSE AND course_id = $1;
+  `;  
+try {
+      const result = await db.query(queryText,[course_id]);
       return result.rows;
     } catch (error) {
       console.error("Failed to get taskes in the model: ", error);
@@ -99,5 +135,6 @@ try {
     UpdateTask,
     SoftdeleteTask,
     RestoreTask,
-    GetTaskes
+    GetTaskes,
+    GetTaskbyID
   };

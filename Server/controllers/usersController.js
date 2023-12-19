@@ -7,38 +7,17 @@ const { admin } = require('../firebase');
 
 
 const multer = require('multer');
-// const upload = multer({ storage: storage });
 
 const path = require('path');
-const storage = multer.memoryStorage(); 
-const upload = multer({ storage: storage }).single('image');
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, 'images'); // المجلد الذي ستحفظ فيه الصورة
-//   },
-//   filename: function (req, file, cb) {
-//     cb(null, Date.now() + path.extname(file.originalname)); // إعطاء الصورة اسم فريد
-//   },
-// });
-//____________________________________________________________________________
-// Storage Image By Multer Start
-// let lastFileSequence = 0;
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, "images");
-//   },
-//   filename: (req, file, cb) => {
-//     lastFileSequence++;
-//     const newFileName = `${Date.now()}_${lastFileSequence}${path.extname(file.originalname)}`;
-//     cb(null, newFileName);
-//   }
-// });
+const storage = multer.memoryStorage(); //بتم تخزين الملفات المرفوعة على الذاكرة بدل تخزين على ملف
+const upload = multer({ storage: storage }).single('image');  
+// configures the upload variable as middleware for handling file uploads using Multer.
+// It is configured using multer({ storage: storage }).
+//Here, the storage location for the uploaded files is specified by the storage variable.
+//     بتم تحديد مكان تخزين املفات المرفوعة من خلال متغير (الستوريج )  الي عرفناها بالسطرر الي قبله
 
-// const addImage = multer({ storage: storage });
-// const imageProduct = addImage.single("image");
-// Storage Image By Multer End
-
-
+//single('image') >> اسم الملف الي رح يتم رفعه لازم يكون اسمه 
+//                   image
 
 //_____________________________________________________________________
 
@@ -50,7 +29,7 @@ const upload = multer({ storage: storage }).single('image');
 
 
 const signup = async (req, res) => {
-  const {  first_name,last_name,email,password } = req.body;
+  const {  first_name,last_name,email,phone,password } = req.body;
 
   try {
     // Check if email is already taken
@@ -67,6 +46,7 @@ const signup = async (req, res) => {
               .string()
               .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
               .required(),
+              phone: joi.string().pattern(/^\d{10}$/).required(),
             password: joi
               .string()
               .pattern(
@@ -79,6 +59,7 @@ const signup = async (req, res) => {
               first_name,
               last_name,
             email,
+            phone,
             password,
           });
           if (validate.error) {
@@ -86,7 +67,7 @@ const signup = async (req, res) => {
           }
           else{
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await UserModel.createUser( first_name,last_name,email,hashedPassword );
+    const newUser = await UserModel.createUser( first_name,last_name,email,phone,hashedPassword );
 
     res.status(201).json({ message: 'User registered successfully', user: newUser });
   }
@@ -98,6 +79,47 @@ const signup = async (req, res) => {
 };
 //____________________________________________________________________________________________________
 
+
+// const login = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+    
+
+//     const user = await UserModel.checkEmail(email);
+
+//     if (!user) {
+//       return res.status(401).json({ message: 'Invalid email' });
+//     }
+//    const storedHashedPassword = user.password;
+//     const passwordMatch = await bcrypt.compare(password, storedHashedPassword);
+//     if (!passwordMatch) {
+//       res.status(400).json({ message: "Email or password is invalid" });
+//       return;
+//   }
+
+//     // Include user information in the token payload
+//     const payload = {
+//        user_id: user.user_id,
+//       email: user.email,
+//     };
+
+//     const secretKey = process.env.SECRET_KEY;
+//     const token = jwt.sign(payload, secretKey, { expiresIn: '7d' });
+//     res.cookie("accessToken", token, { httpOnly: true });
+
+//     res.status(200).json({
+//       message: 'User signed in successfully',
+//       token: token,
+//       user_id: user.user_id,
+//     });
+//     console.log(token);
+//     console.log(user.user_id);
+//   } catch (error) {
+//     console.error('Error logging in:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -126,26 +148,29 @@ const login = async (req, res) => {
     const secretKey = process.env.SECRET_KEY;
     const token = jwt.sign(payload, secretKey, { expiresIn: '7d' });
     res.cookie("accessToken", token, { httpOnly: true });
+    console.log(token);
 
     res.status(200).json({
       message: 'User signed in successfully',
       token: token,
-      user_id: user.user_id,
+      data: {
+        first_name : user.first_name,
+        last_name :user.last_name,
+        picture :user.picture
+      },
     });
-    console.log(token);
-    console.log(user.user_id);
+    // console.log(token);
+    // console.log(user.user_id);
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-
 //_______________________________________________________________________________________________ 666
 
 const updateUser = async (req, res) => {
   // const user_id = req.params.id;
-  const { first_name, last_name, email, password } = req.body;
+  const { first_name, last_name,phone ,password } = req.body;
 
   try {
     const usid = req.user.user_id;
@@ -153,10 +178,7 @@ const updateUser = async (req, res) => {
     const schema = joi.object({
       first_name: joi.string().alphanum().min(3).max(20).required(),
       last_name: joi.string().alphanum().min(3).max(20).required(),
-      email: joi
-        .string()
-        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-        .required(),
+      phone: joi.string().pattern(/^\d{10}$/).required(),
       password: joi
         .string()
         .pattern(
@@ -169,7 +191,7 @@ const updateUser = async (req, res) => {
     const { error } = schema.validate({
       first_name,
       last_name,
-      email,
+      phone,
       password,
     });
 
@@ -179,9 +201,9 @@ const updateUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
-    const result = await UserModel.updateUser( first_name, last_name, email, hashedPassword,usid);
+    const result = await UserModel.updateUser( first_name, last_name, phone,hashedPassword,usid);
 
-    return res.status(200).json({ message: "User updated successfully" });
+    return res.status(200).json({ message: "User updated successfully" ,Theresult:result.rows});
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Update user failed" });
@@ -196,24 +218,21 @@ const updateUser = async (req, res) => {
 
 async function updatePicture(req, res) {
   try {
-    upload(req, res, async function (err) {
+    upload(req, res, async function (err) {   //   'upload'  يستخدم    
+                                              //        لمعالجة رفعmiddleware ك
+                                              //           الملف
       if (err) {
         return res.status(400).json({ success: false, error: err.message });
       }
 
       const usid = req.user.user_id;
 
-      const imageBuffer = req.file ? req.file.buffer : null;
+      const imageBuffer = req.file ? req.file.buffer : null;  //// استخراج بيانات الصورة من الملف
 
       const imageUrl = await uploadImageToFirebase(imageBuffer);
       
+      const picture = imageUrl;          //on postman you should write image
 
-      // if (!image || !image.filename) {
-      //   return res.status(400).json({ success: false, error: 'The image must be uploaded' });
-      // }
-
-      // const answer_url = path.join('image', imageUrl);     //on postman you should write image
-      const picture = imageUrl;
       const result = await db.query('UPDATE users SET picture = $1 WHERE user_id = $2 RETURNING user_id',
       [picture, usid]);
 
@@ -230,8 +249,42 @@ async function updatePicture(req, res) {
 //_______________________________________________________________________________________________
 
 
+// const updatephone = async (req, res) => {
+//   const { phone } = req.body;
+
+//   try {
+//     const usid = req.user.user_id;
+
+//     const phoneRegex = /^\d{10}$/;
+//     if (!phoneRegex.test(phone)) {
+//       return res.status(400).json({ error: 'Invalid phone number format or length' });
+//     }
+
+//     const result = await UserModel.updatephone(phone, usid);
+
+//     return res.status(200).json({ message: "Phone updated successfully" });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Update Phone failed" });
+//   }
+// };
 
 
+
+const GetUserData = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    const result = await db.query('SELECT first_name, last_name, email, picture FROM users WHERE user_id = $1', [userId]);
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('An error occurred while getting user data:', error);
+    res.status(500).json({ error: 'An error occurred while getting user data' });
+  }
+};
+
+//____________________________________________________________________________________________
 async function submitTask(req, res) {
   try {
     upload(req, res, async function (err) {
@@ -253,7 +306,7 @@ async function submitTask(req, res) {
 
       // const answer_url = path.join('image', imageUrl);     //on postman you should write image
       const answer_url = imageUrl;
-      const result = await db.query('UPDATE users_task SET submit_date = DEFAULT, answer_url = $1 WHERE user_id = $2 AND users_task_id = $3 RETURNING users_task_id',
+      const result = await db.query('UPDATE users_task SET submit_date = DEFAULT, answer_url = $1,show=false WHERE user_id = $2 AND users_task_id = $3 RETURNING users_task_id',
        [answer_url, usid, users_task_id]);
 
       const updatedTaskId = result.rows[0].users_task_id;
@@ -270,21 +323,24 @@ async function submitTask(req, res) {
 
 const uploadImageToFirebase = async (imageBuffer) => {
   try {
-    const bucket = admin.storage().bucket();
+    const bucket = admin.storage().bucket();  //    // الاتصال بخدمة Firebase Storage باستخدام Firebase Admin SDK
+
     const folderPath = 'images/';
     const uniqueFilename = 'image-' + Date.now() + '.png';
     const filePath = folderPath + uniqueFilename;
 
-    const file = bucket.file(filePath);
+    const file = bucket.file(filePath);  //    // إنشاء ملف في Firebase Storage ورفع بيانات الصورة إليه
     await file.createWriteStream().end(imageBuffer);
 
     // Get the signed URL for the uploaded file
+
+        // الحصول على رابط مؤقت للصورة المرفوعة
     const [url] = await file.getSignedUrl({
       action: 'read',
       expires: '03-09-2500', // Set an appropriate expiration date
     });
 
-    return url;
+    return url;  // إرجاع رابط الصورة
   } catch (error) {
     console.error('Error uploading image to Firebase:', error);
     throw error;
@@ -578,7 +634,9 @@ module.exports = {
   GetUserCourse,
   // getCourseInfo,
   getCourseAdmin,
-  getStudentsInCourse
+  getStudentsInCourse,
+  GetUserData,
+  // updatephone
   // uploadProfilePicture,
   // imageProduct
   // imageProduct

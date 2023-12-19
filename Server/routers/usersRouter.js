@@ -9,8 +9,10 @@ const authUser= require('../middlewares/authUser')
 
 router.post("/signup",userController.signup);
 router.post("/login",userController.login );
-router.put("/updateUser",authorize.authorize,userController.updateUser );
-router.put("/updatePicture",authorize.authorize,userController.updatePicture );
+router.put("/updateUser",authUser.authUser,userController.updateUser );
+router.put("/updatePicture",authUser.authUser,userController.updatePicture );
+// router.put("/updatephone",authUser.authUser,userController.updatephone );
+router.get("/GetUserData",authUser.authUser,userController.GetUserData );
 
 
 

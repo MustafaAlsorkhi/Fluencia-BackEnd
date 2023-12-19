@@ -6,10 +6,10 @@ const findByEmail = async (email) => {
 };
 //_____________________________________________________________________________________
 
-const createSubadmin = async ( first_name,last_name,email,password ,role) => {
+const createSubadmin = async ( first_name,last_name,email,phone,password ,role) => {
   const result = await db.query(
-    'INSERT INTO admin( first_name,last_name,email,password,role ) VALUES($1, $2, $3,$4,$5) RETURNING *',
-    [ first_name,last_name,email,password ,role]
+    'INSERT INTO admin( first_name,last_name,email,phone,password,role ) VALUES($1, $2, $3,$4,$5,$6) RETURNING *',
+    [ first_name,last_name,email,phone,password ,role]
   );
   return result.rows[0];
 };
@@ -72,7 +72,8 @@ async function searchTeacherByEmail(email) {
 async function getTaskDetails(usersTaskId) {
   try {
     const result = await db.query(`
-      SELECT users.first_name, 
+      SELECT users_task.user_id,
+             users.first_name, 
              users.last_name, 
              task.task_description, 
              task.task_url, 
@@ -109,10 +110,10 @@ async function updateTaskForUser(usersTaskId, startDate, endDate, notes) {
   }
 }
 
-async function addTasktoUser(user_id, task_id, start_date, end_date, admin_id, notes) {
+async function addTasktoUser(user_id, task_id, start_date, end_date, admin_id, notes,course_id) {
   try {
-    const result = await db.query('INSERT INTO users_task(user_id, task_id, start_date, end_date, admin_id, notes) VALUES($1, $2, $3, $4, $5, $6) RETURNING users_task_id',
-     [user_id, task_id, start_date, end_date, admin_id, notes]);
+    const result = await db.query('INSERT INTO users_task(user_id, task_id, start_date, end_date, admin_id, notes,course_id,submit_date, answer_url) VALUES($1, $2, $3, $4, $5, $6,$7,null, null) RETURNING users_task_id',
+     [user_id, task_id, start_date, end_date, admin_id, notes,course_id]);
 
     return { message: 'The task has been added to the user successfully', addedTaskId: result.rows[0].users_task_id };
   } catch (error) {
@@ -127,7 +128,7 @@ async function deleteTaskForUser(users_task_id) {
     await db.query('UPDATE users_task SET deleted = TRUE WHERE users_task_id = $1', [users_task_id]);
     return { message: 'Deleted successfully' };
   } catch (error) {
-    console.error('An error occurred while deleting', error);
+    console.error('An error occurred while deleting', error); 
     throw error;
   }
 }
@@ -146,14 +147,14 @@ async function restoreTaskForUser(users_task_id) {
 
 
 
-async function getCoursesForUser(user_id) {
+async function getCoursesForUser(user_id,pageSize,offset) {
   try {
     const result = await db.query(`
       SELECT courses.course_id, courses.course_name,courses_user.notes
       FROM courses_user 
       JOIN courses ON courses_user.course_id = courses.course_id
-      WHERE courses_user.user_id = $1
-    `, [user_id]);
+      WHERE courses_user.user_id = $1 LIMIT $2 OFFSET $3
+    `, [user_id,pageSize, offset]);
 
     return result.rows;
   } catch (error) {
@@ -211,7 +212,16 @@ async function addCoursetoUser(user_id, course_id, admin_id, notes) {
   }
 }
 
+// 
 
+
+const updateAdminData = async ( first_name, last_name,email,phone ,password,admin_id) => {
+  const queryText =
+  `UPDATE admin SET first_name = $2, last_name = $3,email=$4, phone=$5,password = $6 WHERE admin_id = $1
+    RETURNING admin_id, first_name, last_name,email ,phone,password,picture`;
+  const values = [admin_id, first_name, last_name,email,phone, password];
+  return db.query(queryText, values);
+};
 
 module.exports = {
     findByEmail,
@@ -230,5 +240,6 @@ module.exports = {
     deleteCourseForUser,
     restoreCourseForUser,
     updateCoursetoUser,
-    addCoursetoUser
+    addCoursetoUser,
+    updateAdminData
     };

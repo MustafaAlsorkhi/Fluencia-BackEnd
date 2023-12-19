@@ -1,16 +1,16 @@
-// const db = require("../models/db");
+const db = require("../models/db");
 
 const TaskModel = require('../models/taskModel');
 
 
 async function addTask(req, res) {
-    // const admin_id = req.params.admin_id;
+    const course_id = req.params.course_id;
     const { task_name, task_description, task_url } = req.body;
   
     try {
       const usid = req.user.user_id;
 
-      const newTaskId = await TaskModel.addTask(task_name, task_description, task_url,usid);
+      const newTaskId = await TaskModel.addTask(task_name, task_description, task_url,usid,course_id);
   
       res.status(201).json({ message: "Task added successfully", task_id: newTaskId });
     } catch (error) {
@@ -72,9 +72,32 @@ async function addTask(req, res) {
 
 //____________________________________________________________________________________________________
 
-async function GetTaskes (req, res) {
+// async function GetTaskes (req, res) {
+//     try {
+//       const page = req.params.page;
+//       const pageSize = req.params.pageSize;
+//       const course_id = req.params.course_id;
+//       // const { page = 2, pageSize = 10 } = req.query; 
+  
+//       const offset = (page - 1) * pageSize; 
+//       const Taskes = await TaskModel.GetTaskes(pageSize,offset,course_id);
+//       res.status(200).json(Taskes);
+//     } catch (error) {
+//       console.error("Failed to get Taskes in the controller: ", error);
+//       res.status(500).json({ error: "Failed to get Taskes" });
+//     }
+//   }
+
+  //___________________________________________________________________________________________________
+  async function GetTaskes (req, res) {
     try {
-      const Taskes = await TaskModel.GetTaskes();
+      // const page = req.params.page;
+      // const pageSize = req.params.pageSize;
+      const course_id = req.params.course_id;
+      // const { page = 2, pageSize = 10 } = req.query; 
+  
+      // const offset = (page - 1) * pageSize; 
+      const Taskes = await TaskModel.GetTaskes(course_id);
       res.status(200).json(Taskes);
     } catch (error) {
       console.error("Failed to get Taskes in the controller: ", error);
@@ -82,16 +105,71 @@ async function GetTaskes (req, res) {
     }
   }
 
-
   //___________________________________________________________________________________________________
 
+  async function GetTaskbyID (req, res) {
+    try {
+      const task_id=req.params.task_id
+      const Taskes = await TaskModel.GetTaskbyID(task_id);
+      res.status(200).json(Taskes);
+    } catch (error) {
+      console.error("Failed to get this Task ", error);
+      res.status(500).json({ error: "Failed to get this Task" });
+    }
+  } 
+  //___________________________________________________________________________________________________
+
+  async function GetTaskbyCourseID(req, res) {
+    try {
+      const user_id = req.user.user_id;
+      const course_id = req.params.course_id;
+      const isEnrolled = await db.query('SELECT 1 FROM courses_user WHERE user_id = $1 AND course_id = $2',
+       [user_id,course_id]);
+       if (isEnrolled.rows.length === 0) {
+        return res.status(403).json({ error: ' You are not enrolled in this course' });
+      }
+
+      const result = await db.query(`
+        SELECT task_name, task_description, task_url
+        FROM task
+        WHERE course_id = $1;
+      `, [course_id]);
+  
+      res.status(200).json(result.rows);
+    } catch (error) {
+      console.error('Failed to get tasks for this course', error);
+      res.status(500).json({ error: 'Failed to get tasks for this course' });
+    }
+  }
   
 
-  module.exports = {
-    addTask,
+  
+  async function getTaskbyCourseIdandUserId(req, res) {
+    try {
+      const { course_id ,user_id} = req.params;
+      const result = await db.query(`
+        SELECT task.task_name, task.task_description, task.task_url,answer_url
+        FROM task
+        INNER JOIN users_task ON task.course_id = users_task.course_id AND task.task_id = users_task.task_id
+        WHERE users_task.course_id = $1 AND users_task.user_id = $2;
+      `, [course_id, user_id]);
+  
+      res.status(200).json(result.rows);
+    } catch (error) {
+      console.error('Failed to get tasks for this course and user', error);
+      res.status(500).json({ error: 'Failed to get tasks for this course and user' });
+    }
+  }
+  
+  
+
+  module.exports = { 
+    addTask, 
     UpdateTask,
     SoftdeleteTask,
     RestoreTask,
     GetTaskes,
-
+    GetTaskbyID,
+    GetTaskbyCourseID,
+    getTaskbyCourseIdandUserId
   };

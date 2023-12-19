@@ -7,10 +7,10 @@ const findByEmail = async (email) => {
   return result.rows[0];
 };
 
-const createUser = async ( first_name,last_name,email,password ) => {
+const createUser = async ( first_name,last_name,email,phone,password ) => {
   const result = await db.query(
-    'INSERT INTO users( first_name,last_name,email,password ) VALUES($1, $2, $3,$4) RETURNING *',
-    [ first_name,last_name,email,password ]
+    'INSERT INTO users( first_name,last_name,email,phone,password ) VALUES($1, $2, $3,$4,$5) RETURNING *',
+    [ first_name,last_name,email,phone,password ]
   );
   return result.rows[0];
 };
@@ -29,10 +29,11 @@ const checkEmail = async (email) => {
 
 //__________________________________________________________________________________________
 
-const updateUser = async ( first_name, last_name, email, password,user_id) => {
+const updateUser = async ( first_name, last_name,phone ,password,user_id) => {
     const queryText =
-      "UPDATE users SET first_name = $2, last_name = $3, email = $4, password = $5 WHERE user_id = $1";
-    const values = [user_id, first_name, last_name, email, password];
+    `UPDATE users SET first_name = $2, last_name = $3, phone=$4,password = $5 WHERE user_id = $1
+      RETURNING user_id, first_name, last_name,email ,phone,password,picture`;
+    const values = [user_id, first_name, last_name,phone, password];
     return db.query(queryText, values);
   };
 
@@ -221,6 +222,28 @@ async function getStudentsInCourse(course_id) {
 }
 
 
+async function updatephone(phone, userId) {
+  try {
+    const query = 'UPDATE users SET phone = $1 WHERE user_id = $2 RETURNING user_id, phone';
+    const result = await db.query(query, [phone, userId]);
+    return result.rows[0];
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
   findByEmail,
@@ -236,5 +259,6 @@ module.exports = {
   getTaskDetails,
   // getCourseInfo,
   getCourseAdmin,
-  getStudentsInCourse
+  getStudentsInCourse,
+  updatephone
 };

@@ -13,14 +13,14 @@ function isLoggedIn(req, res, next) {
   }
   
   exports.getuser = (req, res) => {
-    res.send('<a href="/auth/google">Authenticate with Google</a>');
+    res.send('<a href="/auth/google">Authenticate with Google</a>');   //رابط المصادقة 
   };
   
-  exports.getauthenticate = passport.authenticate("google", {
-    scope: ["email", "profile"],
+  exports.getauthenticate = passport.authenticate("google", {      // بستعمل الباسبورت عشان عملية المصادقة
+    scope: ["email", "profile"],  ///نطاقات المصادقة المطلوبة
   });
   
-  exports.callback = passport.authenticate("google", {
+  exports.callback = passport.authenticate("google", {   //يُستدعى بعد نجاح عملية المصادقة بعديها اما بروح على بروتيكتد في حالة النجاح او بروح على الفيلر في حال الفشل
     successRedirect: "/protected",
     failureRedirect: "/auth/google/failure",
   });

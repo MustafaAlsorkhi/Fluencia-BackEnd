@@ -46,6 +46,7 @@ const AdminRoute  = require("./routers/adminUserRouter");
 
 
 const TaskRoute  = require("./routers/taskRouter");
+const FaQRoute  = require("./routers/faqRouter");
 
 const googleRoute = require("./routers/googleRoute");
 
@@ -74,6 +75,7 @@ app.use(AdminRoute);
 app.use(TaskRoute);
 app.use(ContactUs);
 app.use(stripe);
+app.use(FaQRoute);
 // app.use('/',payment);
 
 app.set('view engine', 'ejs');
