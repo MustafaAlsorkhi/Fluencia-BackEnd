@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const joi = require("joi");
 const UserModel = require('../models/userModel');
 const { admin } = require('../firebase');
+const nodemailer = require('nodemailer');
+const bodyParser = require('body-parser');
 
 
 const multer = require('multer');
@@ -614,6 +616,8 @@ async function getStudentsInCourse(req, res) {
   }
 }
 
+//____________________________________________________________________________________________________
+
 
 
 
@@ -636,6 +640,7 @@ module.exports = {
   getCourseAdmin,
   getStudentsInCourse,
   GetUserData,
+  
   // updatephone
   // uploadProfilePicture,
   // imageProduct

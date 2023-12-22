@@ -85,7 +85,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(session({ secret: "cats", resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
- 
+
 // app.use(addCoursetoUser);
 // app.use(updateUserRoute);
 // app.use(addProduct);

@@ -7,7 +7,6 @@ const { STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY } = process.env;
 const stripe = require('stripe')(STRIPE_SECRET_KEY)
 
 const createCustomer = async(req,res)=>{
-    console.log("dfghjkl;lkjhgf")
 
     try {
 const user_id = req.user.user_id

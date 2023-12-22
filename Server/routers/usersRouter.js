@@ -13,7 +13,7 @@ router.put("/updateUser",authUser.authUser,userController.updateUser );
 router.put("/updatePicture",authUser.authUser,userController.updatePicture );
 // router.put("/updatephone",authUser.authUser,userController.updatephone );
 router.get("/GetUserData",authUser.authUser,userController.GetUserData );
-
+ 
 
 
 router.put("/submitTask/:users_task_id",authUser.authUser,userController.submitTask );

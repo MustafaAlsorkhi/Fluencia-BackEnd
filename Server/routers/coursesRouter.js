@@ -16,7 +16,7 @@ router.put("/RestoreCourse/:course_id",authorize.authorize,coursesController.Res
 router.get("/GetCourses/:page/:pageSize",authorize.authorize,coursesController.GetCourses);
 
 router.get("/GetCoursedeleted",authorize.authorize,coursesController.GetCoursedeleted);
-
+ 
 router.get("/GetCourseById/:id",authorize.authorize,coursesController.GetCourseById);
 
 router.get("/GetCoursesByTeacher",authorize.authorize,coursesController.GetCoursesByTeacher);
